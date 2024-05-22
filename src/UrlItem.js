@@ -1,23 +1,33 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { apiURL } from "./App";
+import copyIcon from "./copy-icon.png"
 
 const UrlItem = ({ url }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(`${apiURL}/${url.id}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000); 
+  };
+
   return (
-    <li
-      style={{
-        marginBottom: "10px",
-        padding: "10px",
-        border: "1px solid #ccc",
-        borderRadius: "5px",
-      }}
-    >
-      <p><strong>{url.title}</strong> Clicks: <strong>{url.click_count}</strong></p>
-      <p>Full URL: {url.full_url}</p>
-      <p>Short URL: <a href={`${apiURL}/${url.id}`}>{apiURL}/{url.id}</a></p>
-      <p>Created at: {new Date(url.created_at).toLocaleString()}</p>
-      <p>Updated at: {new Date(url.updated_at).toLocaleString()}</p>
-    </li>
+    <tr>
+      <td>{url.title}</td>
+      <td>{url.click_count}</td>
+      <td>{url.full_url}</td>
+      <td>
+        <div style={{ display: "flex", alignItems: "center" }}>
+        <a href={`${apiURL}/${url.id}`}>{apiURL}/{url.id}</a>
+          <button onClick={copyToClipboard} style={{ marginLeft: "5px", backgroundColor:"transparent",border:"none",cursor:"pointer" }}>
+            {copied ? "Copied!" : <img src={copyIcon} alt="Copy" style={{ width: "20px", height: "20px" }}/>}
+          </button>
+        </div>
+      </td>
+      <td>{new Date(url.created_at).toLocaleString()}</td>
+      <td>{new Date(url.updated_at).toLocaleString()}</td>
+    </tr>
   );
 };
 

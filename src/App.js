@@ -8,6 +8,7 @@ function App() {
   const [url, setUrl] = useState("");
   const [urls, setUrls] = useState([]);
   const [error, setError] = useState("");
+  const [shortenedUrl, setShortenedUrl] = useState(""); 
 
   const fetchURLs = () => {
     fetch(apiURL)
@@ -33,6 +34,8 @@ function App() {
   };
 
   const handleSubmit = () => {
+    setError("");
+    setShortenedUrl("");
     if (url) {
       fetch(`${apiURL}/short_urls.json`, {
         method: "POST",
@@ -45,18 +48,24 @@ function App() {
       })
         .then((response) => {
           if (!response.ok) {
-            throw new Error("Network response was not ok");
+            if (response.status === 422) {
+              throw new Error("Invalid URL");
+            } else {
+              throw new Error("Network response was not ok");
+            }
           }
           return response.json();
         })
         .then((data) => {
           fetchURLs();
-          setUrl("");
-          setError("");
+          setShortenedUrl(apiURL.concat("/", data.short_code));
         })
         .catch((error) => {
-          setError("Error shortening URL");
-          console.error("Error shortening URL:", error);
+          if (error.message === "Invalid URL") {
+            setError("The URL provided is not valid");
+          } else {
+            setError("Error shortening URL");
+          }
         });
     } else {
       setError("URL cannot be empty");
@@ -65,8 +74,11 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <div>
+      <div className="card-container">
+      <h1 className="title">URL Shortener</h1>
+      <span className="input-text">Enter your long URL:</span>
+      
+        <div className="input-wrapper">
           <input
             type="text"
             value={url}
@@ -74,20 +86,38 @@ function App() {
             placeholder="Enter URL"
             className="input-field"
           />
-          <button onClick={handleSubmit} className="submit-button">
-            Shorten URL
-          </button>
-          {error && <p className="error-message">{error}</p>}
+        
+        <button onClick={handleSubmit} className="submit-button">
+          Shorten
+        </button>
         </div>
-        <hr className="divider" />
-        <div>
-          <ul className="url-list">
+        {error && <p className="error-message">{error}</p>}
+        {shortenedUrl && (
+          <div className="shortened-url">
+            <p>Your shortened URL: <a href={shortenedUrl} target="_blank" rel="noopener noreferrer">{shortenedUrl}</a></p>
+          </div>
+        )}
+      </div>
+      <hr className="divider" />
+      <div>
+        <table className="url-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Clicks</th>
+              <th>Full URL</th>
+              <th>Short URL</th>
+              <th>Created At</th>
+              <th>Updated At</th>
+            </tr>
+          </thead>
+          <tbody>
             {urls.slice(0, 100).map((url) => (
               <UrlItem key={url.id} url={url} />
             ))}
-          </ul>
-        </div>
-      </header>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
